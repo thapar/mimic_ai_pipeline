@@ -3,3 +3,6 @@ scrap
 *.gzip
 *.csv.gz
 *summary*.txt
+*/.ipynb_checkpoints
+data
+saved_models
