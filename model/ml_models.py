@@ -101,6 +101,7 @@ class ML_models():
                     concat_cols.extend(cols_t)
             print('train_hids',len(train_hids))
             X_train,Y_train=self.getXY(train_hids,labels,concat_cols)
+
             #encoding categorical
             gen_encoder = LabelEncoder()
             eth_encoder = LabelEncoder()
@@ -167,14 +168,14 @@ class ML_models():
             X_test=pd.get_dummies(X_test,prefix=['gender','ethnicity','insurance'],columns=['gender','ethnicity','insurance'])
             model = xgb.XGBClassifier(objective="binary:logistic").fit(X_train, Y_train)
             #logits=model.predict_log_proba(X_test)
-            #print(self.test_data['ethnicity'])
+            print(self.test_data['ethnicity'])
             #print(self.test_data.shape)
             #print(self.test_data.head())
             prob=model.predict_proba(X_test)
             logits=np.log2(prob[:,1]/prob[:,0])
             self.loss(prob[:,1],np.asarray(Y_test),logits,False,True)
             self.save_outputImp(Y_test,prob[:,1],logits,model.feature_importances_,X_train.columns)
-
+    
 
     
     def getXY(self,ids,labels,concat_cols):
@@ -253,6 +254,17 @@ class ML_models():
 #             print("y_df",y_df.shape)
         print("X_df",X_df.shape)
         print("y_df",y_df.shape)
+       
+        X_df.loc[X_df["ethnicity"].str.contains('ASIAN'), "ethnicity"] = "ASIAN"
+        X_df.loc[X_df["ethnicity"].str.contains('BLACK'), "ethnicity"] = "BLACK"
+        X_df.loc[X_df["ethnicity"].str.contains('HISPANIC'), "ethnicity"] = "HISPANIC/LATINO"
+        X_df.loc[X_df["ethnicity"].str.contains('SOUTH AMERICAN'), "ethnicity"] = "HISPANIC/LATINO"
+        X_df.loc[X_df["ethnicity"].str.contains('WHITE'), "ethnicity"] = "WHITE"
+        X_df.loc[X_df["ethnicity"] == "MULTIPLE RACE/ETHNICITY", "ethnicity"] = "UNKNOWN"
+        X_df.loc[X_df["ethnicity"] == "OTHER", "ethnicity"] = "UNKNOWN"
+        X_df.loc[X_df["ethnicity"] == "PATIENT DECLINED TO ANSWER", "ethnicity"] = "UNKNOWN"
+        X_df.loc[X_df["ethnicity"] == "UNABLE TO OBTAIN", "ethnicity"] = "UNKNOWN"
+        
         return X_df ,y_df
     
     def save_output(self,labels,prob,logits):

@@ -205,6 +205,7 @@ class DataLoader(Dataset):
         label = self.labels[index]
         gender = self.gender[index]
         ethni = self.ethni[index]
+        print (ethni)
         ins = self.ins[index]
 
         # mask 0:len(code) to 1, padding to be 0
@@ -222,10 +223,9 @@ class DataLoader(Dataset):
         code = seq_padding(code, self.max_len)
         position = position_idx(code)
         segment = index_seg(code)
-
-        return torch.LongTensor(code), torch.LongTensor(age), torch.LongTensor(gender), torch.LongTensor(
-            ethni), torch.LongTensor(ins), \
-               torch.LongTensor(segment), torch.LongTensor(position), \
+      
+        return torch.tensor(code).long(), torch.tensor(age).long(), torch.tensor(gender).long(), torch.tensor(ethni).long(),torch.tensor(ins).long(), \
+               torch.tensor(segment).long(), torch.tensor(position).long(), \
                torch.FloatTensor(mask), torch.FloatTensor(label)
 
     def __len__(self):

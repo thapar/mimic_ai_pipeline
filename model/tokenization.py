@@ -16,7 +16,7 @@ class BEHRT_models():
         else:
             self.id='hadm_id'
         self.diag_flag,self.proc_flag,self.out_flag,self.chart_flag,self.med_flag,self.lab_flag=diag_flag,proc_flag,out_flag,chart_flag,med_flag,lab_flag
-        self.tokenization()
+        #self.tokenization()
         
     def tokenize_dataset(self,labs_input, cond_input, demo_input, labels, vocab, demo_vocab, ins_vocab, gender_vocab):
         tokenized_src = []
@@ -121,12 +121,12 @@ class BEHRT_models():
         ethVocab = {}
         insVocab = {}
         condVocab = {'token2idx': {}, 'idx2token': {0: 'PAD', 1: 'CLS', 2: 'SEP'}}
-        with open('ethVocab', 'rb') as fp:
+        with open('/home/csgrad/cduranto/MIMIC-IV-Data-Pipeline/data/dict/ethVocab', 'rb') as fp:
             ethVocab_l = pickle.load(fp)
             for i in range(len(ethVocab_l)):
                 ethVocab[ethVocab_l[i]] = i
 
-        with open('insVocab', 'rb') as fp:
+        with open('/home/csgrad/cduranto/MIMIC-IV-Data-Pipeline/data/dict/insVocab', 'rb') as fp:
             insVocab_l = pickle.load(fp)
             for i in range(len(insVocab_l)):
                 insVocab[insVocab_l[i]] = i
@@ -146,7 +146,7 @@ class BEHRT_models():
         labs_list = labs_list.drop(columns=['index'])
         demo_list = demo_list.sort_values(by=self.id)
 
-        tokenized_src, tokenized_gender, tokenized_ethni, tokenized_ins, tokenized_age, tokenized_labels = tokenize_dataset(
+        tokenized_src, tokenized_gender, tokenized_ethni, tokenized_ins, tokenized_age, tokenized_labels = self.tokenize_dataset(
             labs_list, cond_list, demo_list, labels, condVocab, ethVocab, insVocab, genderVocab)
 
         print("FINAL COHORT STATISTICS: ")

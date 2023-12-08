@@ -25,6 +25,23 @@ import behrt_model
 from behrt_model import *
 
 class train_behrt():
+    # def train(self, trainload, valload, device):
+    #     best_val = math.inf
+    #     for e in range(train_params["epochs"]):
+    #         print("Epoch n" + str(e))
+    #         train_loss, train_time_cost = run_epoch(e, trainload, device)
+    #         val_loss, val_time_cost,pred, label = eval(valload, False, device)
+    #         train_loss = train_loss / math.ceil((train_params["train_data_len"] / train_params['batch_size']))
+    #         val_loss = val_loss / math.ceil((train_params["val_data_len"] / train_params['batch_size']))
+    #         print('TRAIN {}\t{} secs\n'.format(train_loss, train_time_cost))
+    #         print('EVAL {}\t{} secs\n'.format(val_loss, val_time_cost))
+    #         if val_loss < best_val:
+    #             print("** ** * Saving fine - tuned model ** ** * ")
+    #             model_to_save = behrt.module if hasattr(behrt, 'module') else behrt
+    #             save_model(model_to_save.state_dict(), './saved_models/checkpoint/behrt')
+    #             best_val = val_loss
+    #     return train_loss, val_loss   
+     
     def __init__(self,src, age, sex, ethni, ins, target_data):
 
         train_l = int(len(src)*0.70)
@@ -56,9 +73,9 @@ class train_behrt():
 
         train_params = {
             'batch_size': 16,
-            'use_cuda': True,
+            'use_cuda': False,
             'max_len_seq': global_params['max_seq_len'],
-            'device': "cuda:0" if torch.cuda.is_available() else "cpu",
+            'device': "cpu",
             'data_len' : len(target_data),
             'train_data_len' : train_l,
             'val_data_len' : val_l,
@@ -130,42 +147,6 @@ class train_behrt():
         ValDset = DataLoader(val_data, max_len=train_params['max_len_seq'], code='code')
         valload = torch.utils.data.DataLoader(dataset=ValDset, batch_size=train_params['batch_size'], shuffle=True)
 
-        train_loss, val_loss = train(trainload, valload, train_params['device'])
-
-        behrt.load_state_dict(torch.load("./saved_models/checkpoint/behrt", map_location=train_params['device']))
-        print("Loading succesfull")
-
-        TestDset = DataLoader(test_data, max_len=train_params['max_len_seq'], code='code')
-        testload = torch.utils.data.DataLoader(dataset=TestDset, batch_size=train_params['batch_size'], shuffle=True)
-        loss, cost, pred, label = eval(testload, True, train_params['device'])
-
-        labels = pd.read_csv("./data/behrt/behrt_labels.csv", header=None)
-        preds = pd.read_csv("./data/behrt/behrt_preds.csv", header=None)
-
-        labels=labels.drop(0, axis=1)
-        preds=preds.drop(0, axis=1)
-
-        preds = torch.sigmoid(torch.FloatTensor(preds.values))
-        labels = torch.IntTensor(labels.values)
-        print(preds)
-        from torchmetrics import AUROC
-        from torchmetrics import AveragePrecision
-        from torchmetrics import Precision
-        from torchmetrics import Recall
-
-
-        auroc = AUROC(pos_label=1)
-        print(auroc(preds, labels))
-
-        ap = AveragePrecision(pos_label=1)
-        print(ap(preds, labels))
-
-        pres = Precision()
-        print(pres(preds, labels))
-
-        recall = Recall()
-        print(recall(preds, labels))
-
 
         def run_epoch(e, trainload, device):
             tr_loss = 0
@@ -200,28 +181,6 @@ class train_behrt():
                 del loss
             cost = time.time() - start
             return tr_loss, cost
-
-
-        def train(trainload, valload, device):
-            best_val = math.inf
-            for e in range(train_params["epochs"]):
-                print("Epoch n" + str(e))
-                train_loss, train_time_cost = run_epoch(e, trainload, device)
-                val_loss, val_time_cost,pred, label = eval(valload, False, device)
-                train_loss = train_loss / math.ceil((train_params["train_data_len"] / train_params['batch_size']))
-                val_loss = val_loss / math.ceil((train_params["val_data_len"] / train_params['batch_size']))
-                print('TRAIN {}\t{} secs\n'.format(train_loss, train_time_cost))
-                print('EVAL {}\t{} secs\n'.format(val_loss, val_time_cost))
-                if val_loss < best_val:
-                    print("** ** * Saving fine - tuned model ** ** * ")
-                    model_to_save = behrt.module if hasattr(behrt, 'module') else behrt
-                    save_model(model_to_save.state_dict(), './saved_models/checkpoint/behrt')
-                    best_val = val_loss
-            return train_loss, val_loss
-
-
-        #%%
-
         def eval(_valload, saving, device):
             tr_loss = 0
             start = time.time()
@@ -265,8 +224,103 @@ class train_behrt():
 
             cost = time.time() - start
             return tr_loss, cost, logits, labels
-
         def save_model(_model_dict, file_name):
             torch.save(_model_dict, file_name)
+        def train(trainload, valload, device):
+            best_val = math.inf
+            for e in range(train_params["epochs"]):
+                print("Epoch n" + str(e))
+                train_loss, train_time_cost = run_epoch(e, trainload, device)
+                val_loss, val_time_cost,pred, label = eval(valload, False, device)
+                train_loss = train_loss / math.ceil((train_params["train_data_len"] / train_params['batch_size']))
+                val_loss = val_loss / math.ceil((train_params["val_data_len"] / train_params['batch_size']))
+                print('TRAIN {}\t{} secs\n'.format(train_loss, train_time_cost))
+                print('EVAL {}\t{} secs\n'.format(val_loss, val_time_cost))
+                if val_loss < best_val:
+                    print("** ** * Saving fine - tuned model ** ** * ")
+                    model_to_save = behrt.module if hasattr(behrt, 'module') else behrt
+                    save_model(model_to_save.state_dict(), './saved_models/checkpoint/behrt')
+                    best_val = val_loss
+            return train_loss, val_loss  
+
+        train_loss, val_loss = train(trainload, valload, train_params['device'])
+
+        behrt.load_state_dict(torch.load("./saved_models/checkpoint/behrt", map_location=train_params['device']))
+        print("Loading succesfull")
+
+        TestDset = DataLoader(test_data, max_len=train_params['max_len_seq'], code='code')
+        testload = torch.utils.data.DataLoader(dataset=TestDset, batch_size=train_params['batch_size'], shuffle=True)
+        loss, cost, pred, label = eval(testload, True, train_params['device'])
+
+        labels = pd.read_csv("./data/behrt/behrt_labels.csv", header=None)
+        preds = pd.read_csv("./data/behrt/behrt_preds.csv", header=None)
+
+        labels=labels.drop(0, axis=1)
+        preds=preds.drop(0, axis=1)
+
+        preds = torch.sigmoid(torch.FloatTensor(preds.values))
+        labels = torch.IntTensor(labels.values)
+        print(preds)
+        from torchmetrics import AUROC
+        from torchmetrics import AveragePrecision
+        from torchmetrics import Precision
+        from torchmetrics import Recall
+
+
+        auroc = AUROC(task="binary")
+        print(auroc(preds, labels))
+
+        ap = AveragePrecision(task="binary")
+        print(ap(preds, labels))
+
+        pres = Precision(task="binary")
+        print(pres(preds, labels))
+
+        recall = Recall(task="binary")
+        print(recall(preds, labels))
+
+  
+
+
+        # def run_epoch(e, trainload, device):
+        #     tr_loss = 0
+        #     start = time.time()
+        #     behrt.train()
+        #     for step, batch in enumerate(trainload):
+        #         optim_behrt.zero_grad()
+        #         batch = tuple(t for t in batch)
+        #         input_ids, age_ids, gender_ids, ethni_ids, ins_ids, segment_ids, posi_ids, attMask, labels = batch
+
+        #         input_ids = input_ids.to(device)
+        #         age_ids = age_ids.to(device)
+        #         gender_ids = gender_ids.to(device)
+        #         ethni_ids = ethni_ids.to(device)
+        #         ins_ids = ins_ids.to(device)
+        #         posi_ids = posi_ids.to(device)
+        #         segment_ids = segment_ids.to(device)
+        #         attMask = attMask.to(device)
+        #         labels = labels.to(device)
+
+        #         logits = behrt(input_ids, age_ids, gender_ids, ethni_ids, ins_ids, segment_ids, posi_ids,
+        #                        attention_mask=attMask)
+
+        #         loss_fct = nn.BCEWithLogitsLoss()
+        #         loss = loss_fct(logits, labels)
+        #         loss.backward()
+
+        #         tr_loss += loss.item()
+        #         if step%500 == 0:
+        #             print(loss.item())
+        #         optim_behrt.step()
+        #         del loss
+        #     cost = time.time() - start
+        #     return tr_loss, cost
+
+
+
+        #%%
+
+       
+        
 
 
