@@ -38,7 +38,7 @@ class ML_models():
         self.model_type=model_type
         self.concat=concat
         self.oversampling=oversampling
-        self.loss=evaluation.Loss('cpu',True,True,True,True,True,True,True,True,True,True,True)
+        self.loss=evaluation.Loss('cuda',True,True,True,True,True,True,True,True,True,True,True)
         self.ml_train()
     def create_kfolds(self):
         labels=pd.read_csv('./data/csv/labels.csv', header=0)
