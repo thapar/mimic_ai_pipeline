@@ -121,12 +121,14 @@ class BEHRT_models():
         ethVocab = {}
         insVocab = {}
         condVocab = {'token2idx': {}, 'idx2token': {0: 'PAD', 1: 'CLS', 2: 'SEP'}}
-        with open('data/dict/ethVocab', 'rb') as fp:
+        # parent_path = str(Path(__file__).parent)
+        parent_path= os.getcwd()
+        with open(parent_path+'/data/dict/ethVocab', 'rb') as fp:
             ethVocab_l = pickle.load(fp)
             for i in range(len(ethVocab_l)):
                 ethVocab[ethVocab_l[i]] = i
 
-        with open('data/dict/insVocab', 'rb') as fp:
+        with open(parent_path+'/data/dict/insVocab', 'rb') as fp:
             insVocab_l = pickle.load(fp)
             for i in range(len(insVocab_l)):
                 insVocab[insVocab_l[i]] = i
